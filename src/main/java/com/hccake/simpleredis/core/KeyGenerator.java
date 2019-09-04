@@ -7,9 +7,7 @@ import org.springframework.util.Assert;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Hccake
@@ -36,29 +34,19 @@ public class KeyGenerator {
         }
 
         //获取所有需要拼接的元素, 组装进集合中
-        String joint = SpELUtil.parseValueToString(spElContext, spELExpressions);
-        Assert.notNull(joint, "Key joint cannot be null!");
+        List<String> list = new ArrayList<>();
+        list.add(key);
+        String s = SpELUtil.parseValueToString(spElContext, spELExpressions);
+        Assert.notNull(s, "Key joint cannot be null!");
+        list.add(s);
 
         //拼接后返回
-        return jointKey(key, joint);
+        return jointKey(list);
     }
-
-
-
-    public List<String> getKeys(String key, String keyJoint, Collection<String> multiByItem) {
-        String keyPrefix = getKey(key, keyJoint);
-
-        List<String> list = new ArrayList<>();
-        for (String item : multiByItem) {
-            list.add(jointKey(keyPrefix, item));
-        }
-
-        return list;
-    }
-
 
 
     /**
+     * TODO 后续用来做 MGET
      * @param key
      * @param spELExpressions
      * @return
@@ -83,9 +71,6 @@ public class KeyGenerator {
     }
 
 
-
-
-
     /**
      * 解析SPEL
      * @param field
@@ -102,7 +87,7 @@ public class KeyGenerator {
      * @return
      */
     public String jointKey(List<String> list) {
-        return list.stream().collect(Collectors.joining(RedisCons.DELIMITER));
+        return String.join(RedisCons.DELIMITER, list);
     }
 
 

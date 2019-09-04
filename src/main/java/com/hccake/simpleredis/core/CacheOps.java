@@ -58,14 +58,14 @@ public abstract class CacheOps {
      *
      * @return Supplier
      */
-    private Supplier<Object> cacheQuery;
+    private Supplier<String> cacheQuery;
 
     /**
      * 向缓存写入数据
      *
      * @return Consumer
      */
-    private Consumer<Object> cachePut;
+    private Consumer<String> cachePut;
 
     /**
      * 删除缓存数据
@@ -80,7 +80,8 @@ public abstract class CacheOps {
      * @return
      */
     public static ResultMethod<Object> genPointMethodByPoint(ProceedingJoinPoint point) {
-        ResultMethod<Object> pointMethod = () -> {
+
+        return () -> {
             try {
                 return point.proceed();
             } catch (Throwable throwable) {
@@ -88,12 +89,10 @@ public abstract class CacheOps {
             }
             return null;
         };
-
-        return pointMethod;
     }
 
 
-    public Supplier cacheQuery() {
+    public Supplier<String> cacheQuery() {
         return cacheQuery;
     }
 
@@ -101,7 +100,7 @@ public abstract class CacheOps {
         return pointMethod;
     }
 
-    public Consumer<Object> cachePut() {
+    public Consumer<String> cachePut() {
         return cachePut;
     }
 
@@ -121,7 +120,7 @@ public abstract class CacheOps {
         this.lockKey = lockKey;
     }
 
-    public void setCacheQuery(Supplier<Object> cacheQuery) {
+    public void setCacheQuery(Supplier<String> cacheQuery) {
         this.cacheQuery = cacheQuery;
     }
 
@@ -129,7 +128,7 @@ public abstract class CacheOps {
         this.pointMethod = pointMethod;
     }
 
-    public void setCachePut(Consumer<Object> cachePut) {
+    public void setCachePut(Consumer<String> cachePut) {
         this.cachePut = cachePut;
     }
 
