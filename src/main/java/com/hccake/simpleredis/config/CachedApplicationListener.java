@@ -1,6 +1,6 @@
 package com.hccake.simpleredis.config;
 
-import com.hccake.simpleredis.hash.CachedHashAspect;
+import com.hccake.simpleredis.string.CacheStringAspect;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.BeansException;
@@ -27,8 +27,16 @@ import java.util.Map;
 @Slf4j
 public class CachedApplicationListener implements ApplicationListener {
 
+    private CachedDeriveSource cachedDeriveSource = CachedDeriveSource.getInstance();
+
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
+        if (!cachedDeriveSource.isEnableSimpleCache()) {
+            // 未启用 EnableSimpleCache
+            log.debug("未启用 EnableSimpleCache");
+            return;
+        }
+
         if (event instanceof ApplicationPreparedEvent) {
             onApplicationPreparedEvent((ApplicationPreparedEvent) event);
         }
@@ -39,12 +47,12 @@ public class CachedApplicationListener implements ApplicationListener {
         context.addBeanFactoryPostProcessor(new CachedPostProcessor());
     }
 
-    private static class CachedPostProcessor implements BeanFactoryPostProcessor {
+    private class CachedPostProcessor implements BeanFactoryPostProcessor {
 
         @Override
         public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
             try {
-                Method declaredMethod = CachedHashAspect.class.getDeclaredMethod("cacheHashPointCut");
+                Method declaredMethod = CacheStringAspect.class.getDeclaredMethod("pointCut");
                 modifyExpression(declaredMethod);
             } catch (Exception e) {
                 log.error(e.getMessage());
@@ -61,11 +69,11 @@ public class CachedApplicationListener implements ApplicationListener {
             Map<String, String> values = (Map<String, String>) field.get(handler);
 
             // 拼接表达式
-            ArrayList<? extends Class<?>> deriveSource = CachedDeriveSource.getInstance().getDeriveSource();
+            ArrayList<? extends Class<?>> deriveSource = cachedDeriveSource.getDeriveSource();
             int size = deriveSource.size();
             StringBuilder buffer = new StringBuilder();
             for (int i = 0; i < size; i++) {
-                if (size > 1 && i == 0) {
+                if (i == 0) {
                     buffer.append("@annotation(").append(deriveSource.get(i).getName()).append(")");
                 } else {
                     buffer.append(" || @annotation(").append(deriveSource.get(i).getName()).append(")");
